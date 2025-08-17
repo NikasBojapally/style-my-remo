@@ -10,13 +10,34 @@ import { OrbitControls, Environment } from '@react-three/drei';
 import { Shirt, ShoppingCart, Save, RotateCcw, Palette, Sparkles } from 'lucide-react';
 import * as THREE from 'three';
 
-// 3D Avatar Component
+// 3D Shirt Component
 const Avatar = ({ clothing }: { clothing: any }) => {
   return (
-    <mesh>
-      <boxGeometry args={[2, 3, 0.5]} />
-      <meshStandardMaterial color={clothing.color || '#3b82f6'} />
-    </mesh>
+    <group>
+      {/* Shirt Body */}
+      <mesh position={[0, -0.2, 0]}>
+        <boxGeometry args={[1.8, 2.2, 0.3]} />
+        <meshStandardMaterial color={clothing.color || '#8B5CF6'} />
+      </mesh>
+      
+      {/* Left Sleeve */}
+      <mesh position={[-1.2, 0.3, 0]} rotation={[0, 0, 0.3]}>
+        <cylinderGeometry args={[0.3, 0.25, 1.2, 8]} />
+        <meshStandardMaterial color={clothing.color || '#8B5CF6'} />
+      </mesh>
+      
+      {/* Right Sleeve */}
+      <mesh position={[1.2, 0.3, 0]} rotation={[0, 0, -0.3]}>
+        <cylinderGeometry args={[0.3, 0.25, 1.2, 8]} />
+        <meshStandardMaterial color={clothing.color || '#8B5CF6'} />
+      </mesh>
+      
+      {/* Collar */}
+      <mesh position={[0, 1, 0.1]}>
+        <boxGeometry args={[0.8, 0.3, 0.1]} />
+        <meshStandardMaterial color={clothing.color || '#8B5CF6'} />
+      </mesh>
+    </group>
   );
 };
 
