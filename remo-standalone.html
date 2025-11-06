@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="REMO 3D Clothing Customizer - Design your perfect clothing">
+  <title>REMO - 3D Clothing Customizer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #8B5CF6;
+      --primary-dark: #7C3AED;
+      --secondary: #EC4899;
+      --background: #0F172A;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.1);
+      --text-primary: #FFFFFF;
+      --text-secondary: rgba(255, 255, 255, 0.7);
+      --shadow: rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .header {
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(20px);
+      padding: 20px 0;
+      box-shadow: 0 4px 20px var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav {
+      display: flex;
+      gap: 20px;
+    }
+
+    .nav-btn {
+      padding: 8px 20px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .nav-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      margin-bottom: 50px;
+      animation: fadeInDown 0.8s ease-out;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Grid Layout */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    @media (max-width: 1024px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+      .nav {
+        display: none;
+      }
+    }
+
+    /* Card */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 10px 40px var(--shadow);
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-icon {
+      font-size: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Canvas Container */
+    #canvas-container {
+      height: 500px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+
+    .canvas-info {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      pointer-events: none;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 28px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 6px;
+      border-radius: 12px;
+    }
+
+    .tab {
+      padding: 14px 20px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1rem;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .tab:hover {
+      background: rgba(139, 92, 246, 0.3);
+      color: var(--text-primary);
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+    }
+
+    /* Options Section */
+    .option-section {
+      margin-bottom: 28px;
+    }
+
+    .option-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Color Grid */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+    }
+
+    .color-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .color-btn::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 12px;
+      padding: 3px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .color-btn:hover {
+      transform: scale(1.15);
+    }
+
+    .color-btn.active::before {
+      opacity: 1;
+    }
+
+    .color-btn.active {
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+    }
+
+    /* Button Grid */
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--primary);
+    }
+
+    .btn-ghost.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      padding-top: 28px;
+      border-top: 1px solid var(--border);
+      margin-top: 28px;
+    }
+
+    .btn-hero {
+      flex: 1;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-hero:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5);
+    }
+
+    .btn-icon {
+      width: 52px;
+      height: 52px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Animations */
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(15, 23, 42, 0.95);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--primary);
+      z-index: 1000;
+      animation: slideIn 0.3s ease-out;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .toast.success {
+      border-color: #10B981;
+    }
+
+    .toast-icon {
+      font-size: 1.5rem;
+    }
+
+    /* Footer */
+    .footer {
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(20px);
+      padding: 40px 20px;
+      margin-top: 60px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-content {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .footer p {
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .footer-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-link:hover {
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">REMO</div>
+      <nav class="nav">
+        <button class="nav-btn">Home</button>
+        <button class="nav-btn">About</button>
+        <button class="nav-btn">Contact</button>
+        <button class="nav-btn" onclick="viewCart()">🛒 Cart (<span id="cart-count">0</span>)</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <!-- Hero Section -->
+    <section class="hero">
+      <h1>3D Clothing Customizer</h1>
+      <p>Design your perfect clothing with our advanced 3D tools. Choose colors, materials, and patterns in real-time.</p>
+    </section>
+
+    <div class="grid">
+      <!-- 3D Preview Card -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">✨</span>
+          <h2 class="card-title">Live 3D Preview</h2>
+        </div>
+        <div id="canvas-container">
+          <div class="canvas-info">🖱️ Drag to rotate • Scroll to zoom</div>
+        </div>
+      </div>
+
+      <!-- Controls Card -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">🎨</span>
+          <h2 class="card-title">Customization Options</h2>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="tabs">
+          <button class="tab active" data-category="shirts" onclick="changeCategory('shirts')">
+            👔 Shirts
+          </button>
+          <button class="tab" data-category="pants" onclick="changeCategory('pants')">
+            👖 Pants
+          </button>
+          <button class="tab" data-category="shoes" onclick="changeCategory('shoes')">
+            👟 Shoes
+          </button>
+        </div>
+
+        <!-- Options Content -->
+        <div id="options-content">
+          <!-- Colors -->
+          <div class="option-section">
+            <h3 class="option-title">🎨 Colors</h3>
+            <div class="color-grid" id="color-grid"></div>
+          </div>
+
+          <!-- Materials -->
+          <div class="option-section">
+            <h3 class="option-title">🧵 Materials</h3>
+            <div class="button-grid" id="material-grid"></div>
+          </div>
+
+          <!-- Patterns -->
+          <div class="option-section">
+            <h3 class="option-title">✨ Patterns</h3>
+            <div class="button-grid" id="pattern-grid"></div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button class="btn btn-hero" onclick="addToCart()">
+              🛒 Add to Cart ($99.99)
+            </button>
+            <button class="btn btn-primary btn-icon" onclick="saveDesign()" title="Save Design">
+              💾
+            </button>
+            <button class="btn btn-ghost btn-icon" onclick="resetDesign()" title="Reset">
+              🔄
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p class="logo" style="margin-bottom: 10px;">REMO</p>
+      <p>Design your perfect clothing with cutting-edge 3D technology</p>
+      <div class="footer-links">
+        <a href="#" class="footer-link">About</a>
+        <a href="#" class="footer-link">Contact</a>
+        <a href="#" class="footer-link">Privacy</a>
+        <a href="#" class="footer-link">Terms</a>
+      </div>
+      <p style="margin-top: 20px; font-size: 0.875rem;">© 2024 REMO. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    // ========== STATE MANAGEMENT ==========
+    let state = {
+      category: 'shirts',
+      color: '#8B5CF6',
+      material: 'cotton',
+      pattern: 'solid'
+    };
+
+    const clothingOptions = {
+      shirts: {
+        colors: ['#8B5CF6', '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#6B7280'],
+        materials: ['cotton', 'silk', 'linen', 'polyester'],
+        patterns: ['solid', 'stripes', 'dots', 'floral']
+      },
+      pants: {
+        colors: ['#1F2937', '#3B82F6', '#6B7280', '#92400E', '#374151', '#111827'],
+        materials: ['denim', 'cotton', 'wool', 'polyester'],
+        patterns: ['solid', 'checkered', 'stripes']
+      },
+      shoes: {
+        colors: ['#000000', '#FFFFFF', '#8B4513', '#DC2626', '#1F2937', '#3B82F6'],
+        materials: ['leather', 'canvas', 'synthetic', 'suede'],
+        patterns: ['solid', 'textured', 'mixed']
+      }
+    };
+
+    // ========== THREE.JS SETUP ==========
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    
+    const container = document.getElementById('canvas-container');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    renderer.setSize(width, height);
+    container.insertBefore(renderer.domElement, container.firstChild);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    
+    const spotLight = new THREE.SpotLight(0xffffff, 1);
+    spotLight.position.set(10, 10, 10);
+    scene.add(spotLight);
+    
+    const pointLight = new THREE.PointLight(0xffffff, 0.5);
+    pointLight.position.set(-10, -10, -10);
+    scene.add(pointLight);
+
+    // Create 3D clothing model
+    const geometry = new THREE.BoxGeometry(2, 3, 0.5);
+    const material = new THREE.MeshStandardMaterial({ 
+      color: state.color,
+      metalness: 0.3,
+      roughness: 0.7
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    camera.position.z = 5;
+
+    // ========== MOUSE CONTROLS ==========
+    let isDragging = false;
+    let previousMouse = { x: 0, y: 0 };
+
+    renderer.domElement.addEventListener('mousedown', () => {
+      isDragging = true;
+    });
+
+    renderer.domElement.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    renderer.domElement.addEventListener('mouseleave', () => {
+      isDragging = false;
+    });
+
+    renderer.domElement.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        const deltaX = e.clientX - previousMouse.x;
+        const deltaY = e.clientY - previousMouse.y;
+        mesh.rotation.y += deltaX * 0.01;
+        mesh.rotation.x += deltaY * 0.01;
+      }
+      previousMouse = { x: e.clientX, y: e.clientY };
+    });
+
+    // Zoom controls
+    renderer.domElement.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      camera.position.z += e.deltaY * 0.005;
+      camera.position.z = Math.max(3, Math.min(8, camera.position.z));
+    });
+
+    // ========== ANIMATION LOOP ==========
+    function animate() {
+      requestAnimationFrame(animate);
+      if (!isDragging) {
+        mesh.rotation.y += 0.003;
+      }
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // ========== WINDOW RESIZE ==========
+    window.addEventListener('resize', () => {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    });
+
+    // ========== UI FUNCTIONS ==========
+    function updateUI() {
+      const options = clothingOptions[state.category];
+      
+      // Update colors
+      const colorGrid = document.getElementById('color-grid');
+      colorGrid.innerHTML = '';
+      options.colors.forEach(color => {
+        const btn = document.createElement('button');
+        btn.className = 'color-btn' + (state.color === color ? ' active' : '');
+        btn.style.backgroundColor = color;
+        btn.title = color;
+        btn.onclick = () => changeColor(color);
+        colorGrid.appendChild(btn);
+      });
+
+      // Update materials
+      const materialGrid = document.getElementById('material-grid');
+      materialGrid.innerHTML = '';
+      options.materials.forEach(mat => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-ghost' + (state.material === mat ? ' active' : '');
+        btn.textContent = mat.charAt(0).toUpperCase() + mat.slice(1);
+        btn.onclick = () => changeMaterial(mat);
+        materialGrid.appendChild(btn);
+      });
+
+      // Update patterns
+      const patternGrid = document.getElementById('pattern-grid');
+      patternGrid.innerHTML = '';
+      options.patterns.forEach(pat => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-ghost' + (state.pattern === pat ? ' active' : '');
+        btn.textContent = pat.charAt(0).toUpperCase() + pat.slice(1);
+        btn.onclick = () => changePattern(pat);
+        patternGrid.appendChild(btn);
+      });
+    }
+
+    // ========== CATEGORY CHANGE ==========
+    function changeCategory(category) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-category="${category}"]`).classList.add('active');
+      
+      state.category = category;
+      state.color = clothingOptions[category].colors[0];
+      state.material = clothingOptions[category].materials[0];
+      state.pattern = 'solid';
+      
+      mesh.material.color.set(state.color);
+      updateUI();
+    }
+
+    function changeColor(color) {
+      state.color = color;
+      mesh.material.color.set(color);
+      updateUI();
+    }
+
+    function changeMaterial(material) {
+      state.material = material;
+      updateUI();
+    }
+
+    function changePattern(pattern) {
+      state.pattern = pattern;
+      updateUI();
+    }
+
+    // ========== CART & SAVE FUNCTIONS ==========
+    function addToCart() {
+      const cart = JSON.parse(localStorage.getItem('remo_cart') || '[]');
+      const item = {
+        id: Date.now().toString(),
+        ...state,
+        price: 99.99,
+        quantity: 1,
+        createdAt: new Date().toISOString()
+      };
+      cart.push(item);
+      localStorage.setItem('remo_cart', JSON.stringify(cart));
+      updateCartCount();
+      showToast('✅ Added to cart successfully!', 'success');
+    }
+
+    function saveDesign() {
+      const designs = JSON.parse(localStorage.getItem('remo_designs') || '[]');
+      const design = {
+        id: Date.now().toString(),
+        ...state,
+        createdAt: new Date().toISOString()
+      };
+      designs.push(design);
+      localStorage.setItem('remo_designs', JSON.stringify(designs));
+      showToast('💾 Design saved successfully!', 'success');
+    }
+
+    function resetDesign() {
+      state.color = clothingOptions[state.category].colors[0];
+      state.material = clothingOptions[state.category].materials[0];
+      state.pattern = 'solid';
+      mesh.material.color.set(state.color);
+      updateUI();
+      showToast('🔄 Design reset', 'success');
+    }
+
+    function viewCart() {
+      const cart = JSON.parse(localStorage.getItem('remo_cart') || '[]');
+      if (cart.length === 0) {
+        showToast('🛒 Cart is empty', 'success');
+      } else {
+        showToast(`🛒 You have ${cart.length} item(s) in cart`, 'success');
+        console.log('Cart items:', cart);
+      }
+    }
+
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem('remo_cart') || '[]');
+      document.getElementById('cart-count').textContent = cart.length;
+    }
+
+    // ========== TOAST NOTIFICATION ==========
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <span class="toast-icon">${type === 'success' ? '✅' : 'ℹ️'}</span>
+        <span>${message}</span>
+      `;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease-out reverse';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ========== INITIALIZE ==========
+    updateUI();
+    updateCartCount();
+    
+    console.log('🎨 REMO Customizer loaded successfully!');
+    console.log('📦 Cart items:', JSON.parse(localStorage.getItem('remo_cart') || '[]').length);
+    console.log('💾 Saved designs:', JSON.parse(localStorage.getItem('remo_designs') || '[]').length);
+  </script>
+</body>
+</html>
