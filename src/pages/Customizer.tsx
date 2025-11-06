@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/enhanced-button';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/AuthContext';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
 import { Shirt, ShoppingCart, Save, RotateCcw, Palette, Sparkles } from 'lucide-react';
-import * as THREE from 'three';
+import { toast } from 'sonner';
 
 // 3D Avatar Component
 const Avatar = ({ clothing }: { clothing: any }) => {
   return (
     <mesh>
       <boxGeometry args={[2, 3, 0.5]} />
-      <meshStandardMaterial color={clothing.color || '#3b82f6'} />
+      <meshStandardMaterial color={clothing.color || '#8B5CF6'} />
     </mesh>
   );
 };
@@ -80,15 +80,20 @@ const Customizer = () => {
     };
     designs.push(newDesign);
     localStorage.setItem('remo_designs', JSON.stringify(designs));
-    
-    // Add to cart logic here
+    toast.success('Design saved successfully!');
+  };
+
+  const addToCart = () => {
     const cartItems = JSON.parse(localStorage.getItem('remo_cart') || '[]');
-    cartItems.push({
-      ...newDesign,
+    const newItem = {
+      id: Date.now().toString(),
+      ...clothing,
       price: 99.99,
       quantity: 1,
-    });
+    };
+    cartItems.push(newItem);
     localStorage.setItem('remo_cart', JSON.stringify(cartItems));
+    toast.success('Added to cart!');
   };
 
   const resetDesign = () => {
@@ -231,15 +236,15 @@ const Customizer = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-3 pt-6 border-t border-white/10">
-                      <Button variant="hero" onClick={saveDesign} className="flex-1">
+                    <div className="flex gap-3 pt-6 border-t border-border/50">
+                      <Button variant="default" onClick={addToCart} className="flex-1">
                         <ShoppingCart className="h-4 w-4" />
                         Add to Cart
                       </Button>
-                      <Button variant="glass" onClick={saveDesign}>
+                      <Button variant="secondary" onClick={saveDesign} size="icon">
                         <Save className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" onClick={resetDesign}>
+                      <Button variant="ghost" onClick={resetDesign} size="icon">
                         <RotateCcw className="h-4 w-4" />
                       </Button>
                     </div>
