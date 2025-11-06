@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REMO 3D Customizer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      animation: bounceIn 0.8s ease-out;
+    }
+
+    .header h1 {
+      font-size: 3rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+
+    .header p {
+      font-size: 1.25rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    @media (max-width: 1024px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    #canvas-container {
+      height: 500px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(102, 126, 234, 0.3) 100%);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 4px;
+      border-radius: 8px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .tab.active {
+      background: #667eea;
+    }
+
+    .tab:hover {
+      background: rgba(102, 126, 234, 0.5);
+    }
+
+    .option-section {
+      margin-bottom: 24px;
+    }
+
+    .option-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+    }
+
+    .color-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .color-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .color-btn.active {
+      border-color: #667eea;
+      box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-ghost.active {
+      background: #667eea;
+      border-color: #667eea;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-hero {
+      flex: 1;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .btn-icon {
+      width: 48px;
+      padding: 12px;
+    }
+
+    @keyframes bounceIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.3);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.05);
+      }
+      70% {
+        transform: scale(0.9);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .icon {
+      width: 20px;
+      height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>3D Customizer</h1>
+      <p>Design your perfect clothing with our advanced 3D tools</p>
+    </div>
+
+    <div class="grid">
+      <!-- 3D Preview -->
+      <div class="fade-in-up">
+        <div class="card">
+          <div class="card-header">
+            <span class="icon">✨</span>
+            <h2 class="card-title">Live Preview</h2>
+          </div>
+          <div id="canvas-container"></div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="fade-in-up">
+        <div class="card">
+          <div class="card-header">
+            <span class="icon">🎨</span>
+            <h2 class="card-title">Customization Options</h2>
+          </div>
+
+          <!-- Tabs -->
+          <div class="tabs">
+            <button class="tab active" data-category="shirts">
+              👔 Shirts
+            </button>
+            <button class="tab" data-category="pants">
+              👖 Pants
+            </button>
+            <button class="tab" data-category="shoes">
+              👟 Shoes
+            </button>
+          </div>
+
+          <!-- Tab Content -->
+          <div id="tab-content">
+            <!-- Colors -->
+            <div class="option-section">
+              <h3 class="option-title">Colors</h3>
+              <div class="color-grid" id="color-grid"></div>
+            </div>
+
+            <!-- Materials -->
+            <div class="option-section">
+              <h3 class="option-title">Materials</h3>
+              <div class="button-grid" id="material-grid"></div>
+            </div>
+
+            <!-- Patterns -->
+            <div class="option-section">
+              <h3 class="option-title">Patterns</h3>
+              <div class="button-grid" id="pattern-grid"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+              <button class="btn btn-hero" id="add-to-cart">
+                🛒 Add to Cart
+              </button>
+              <button class="btn btn-primary btn-icon" id="save-btn">
+                💾
+              </button>
+              <button class="btn btn-ghost btn-icon" id="reset-btn">
+                🔄
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State management
+    let state = {
+      category: 'shirts',
+      color: '#8B5CF6',
+      material: 'cotton',
+      pattern: 'solid'
+    };
+
+    const clothingOptions = {
+      shirts: {
+        colors: ['#8B5CF6', '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#6B7280'],
+        materials: ['cotton', 'silk', 'linen', 'polyester'],
+        patterns: ['solid', 'stripes', 'dots', 'floral']
+      },
+      pants: {
+        colors: ['#1F2937', '#3B82F6', '#6B7280', '#92400E', '#374151', '#111827'],
+        materials: ['denim', 'cotton', 'wool', 'polyester'],
+        patterns: ['solid', 'checkered', 'stripes']
+      },
+      shoes: {
+        colors: ['#000000', '#FFFFFF', '#8B4513', '#DC2626', '#1F2937', '#3B82F6'],
+        materials: ['leather', 'canvas', 'synthetic', 'suede'],
+        patterns: ['solid', 'textured', 'mixed']
+      }
+    };
+
+    // Three.js setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    
+    const container = document.getElementById('canvas-container');
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    
+    const spotLight = new THREE.SpotLight(0xffffff, 1);
+    spotLight.position.set(10, 10, 10);
+    scene.add(spotLight);
+    
+    const pointLight = new THREE.PointLight(0xffffff, 0.5);
+    pointLight.position.set(-10, -10, -10);
+    scene.add(pointLight);
+
+    // Create 3D object
+    const geometry = new THREE.BoxGeometry(2, 3, 0.5);
+    const material = new THREE.MeshStandardMaterial({ color: state.color });
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    camera.position.z = 5;
+
+    // Mouse controls
+    let isDragging = false;
+    let previousMouse = { x: 0, y: 0 };
+
+    renderer.domElement.addEventListener('mousedown', () => isDragging = true);
+    renderer.domElement.addEventListener('mouseup', () => isDragging = false);
+    renderer.domElement.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        const deltaX = e.clientX - previousMouse.x;
+        const deltaY = e.clientY - previousMouse.y;
+        mesh.rotation.y += deltaX * 0.01;
+        mesh.rotation.x += deltaY * 0.01;
+      }
+      previousMouse = { x: e.clientX, y: e.clientY };
+    });
+
+    renderer.domElement.addEventListener('wheel', (e) => {
+      camera.position.z += e.deltaY * 0.01;
+      camera.position.z = Math.max(3, Math.min(8, camera.position.z));
+    });
+
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      if (!isDragging) {
+        mesh.rotation.y += 0.005;
+      }
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Window resize
+    window.addEventListener('resize', () => {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    });
+
+    // UI functions
+    function updateUI() {
+      const options = clothingOptions[state.category];
+      
+      // Update colors
+      const colorGrid = document.getElementById('color-grid');
+      colorGrid.innerHTML = '';
+      options.colors.forEach(color => {
+        const btn = document.createElement('button');
+        btn.className = 'color-btn' + (state.color === color ? ' active' : '');
+        btn.style.backgroundColor = color;
+        btn.onclick = () => {
+          state.color = color;
+          mesh.material.color.set(color);
+          updateUI();
+        };
+        colorGrid.appendChild(btn);
+      });
+
+      // Update materials
+      const materialGrid = document.getElementById('material-grid');
+      materialGrid.innerHTML = '';
+      options.materials.forEach(mat => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-ghost' + (state.material === mat ? ' active' : '');
+        btn.textContent = mat.charAt(0).toUpperCase() + mat.slice(1);
+        btn.onclick = () => {
+          state.material = mat;
+          updateUI();
+        };
+        materialGrid.appendChild(btn);
+      });
+
+      // Update patterns
+      const patternGrid = document.getElementById('pattern-grid');
+      patternGrid.innerHTML = '';
+      options.patterns.forEach(pat => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-ghost' + (state.pattern === pat ? ' active' : '');
+        btn.textContent = pat.charAt(0).toUpperCase() + pat.slice(1);
+        btn.onclick = () => {
+          state.pattern = pat;
+          updateUI();
+        };
+        patternGrid.appendChild(btn);
+      });
+    }
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        state.category = tab.dataset.category;
+        state.color = clothingOptions[state.category].colors[0];
+        state.material = clothingOptions[state.category].materials[0];
+        state.pattern = 'solid';
+        mesh.material.color.set(state.color);
+        updateUI();
+      });
+    });
+
+    // Action buttons
+    document.getElementById('add-to-cart').addEventListener('click', () => {
+      const cart = JSON.parse(localStorage.getItem('remo_cart') || '[]');
+      cart.push({ ...state, price: 99.99, quantity: 1, id: Date.now() });
+      localStorage.setItem('remo_cart', JSON.stringify(cart));
+      alert('Added to cart!');
+    });
+
+    document.getElementById('save-btn').addEventListener('click', () => {
+      const designs = JSON.parse(localStorage.getItem('remo_designs') || '[]');
+      designs.push({ ...state, id: Date.now(), createdAt: new Date().toISOString() });
+      localStorage.setItem('remo_designs', JSON.stringify(designs));
+      alert('Design saved!');
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      state.color = clothingOptions[state.category].colors[0];
+      state.material = clothingOptions[state.category].materials[0];
+      state.pattern = 'solid';
+      mesh.material.color.set(state.color);
+      updateUI();
+    });
+
+    // Initialize
+    updateUI();
+  </script>
+</body>
+</html>
